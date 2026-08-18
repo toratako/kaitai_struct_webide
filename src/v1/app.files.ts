@@ -3,7 +3,7 @@ import dateFormat = require("dateformat");
 
 import { app } from "./app";
 import { IJSTreeNode } from "./parsedToTree";
-import { downloadFile, saveFile, openFilesWithDialog } from "../utils";
+import { downloadFile, saveFile, openFilesWithDialog, hexDecode } from "../utils";
 import * as A11yDialog from "a11y-dialog";
 
 declare var kaitaiFsFiles: string[];
@@ -240,6 +240,7 @@ export function initFileTree() {
         downloadItem: $("#fileTreeContextMenu .downloadItem"),
         deleteItem: $("#fileTreeContextMenu .deleteItem"),
         createLocalKsyFile: $("#createLocalKsyFile"),
+        pasteHexInput: $("#pasteHexInput"),
         uploadFile: $("#uploadFile"),
         downloadFile: $("#downloadFile"),
     };
@@ -508,6 +509,41 @@ export function initFileTree() {
     uiFiles.downloadFile.on("click", () => downloadFiles());
 
     uiFiles.uploadFile.on("click", () => openFilesWithDialog(files => app.addNewFiles(files)));
+
+    let pasteHexDialog: any;
+    uiFiles.pasteHexInput.on("click", () => {
+        if (!pasteHexDialog) {
+            const modal = $("#pasteHexModal")[0];
+            pasteHexDialog = new A11yDialog(modal);
+            modal.addEventListener("click", () => pasteHexDialog.hide());
+            modal.querySelector(".dialog-content").addEventListener("click", e => e.stopPropagation());
+            const overlay = document.querySelector("#pasteHexModalOverlay");
+            pasteHexDialog
+                .on("show", () => overlay.classList.remove("hidden"))
+                .on("hide", () => overlay.classList.add("hidden"));
+        }
+        $("#pasteHexValue").val("");
+        $("#pasteHexError").text("");
+        pasteHexDialog.show();
+    });
+
+    $("#pasteHexModal form").submit(async event => {
+        event.preventDefault();
+        let content: ArrayBuffer;
+        try {
+            content = hexDecode(String($("#pasteHexValue").val()));
+        } catch (error) {
+            $("#pasteHexError").text(error instanceof Error ? error.message : String(error));
+            return;
+        }
+
+        pasteHexDialog.hide();
+        try {
+            await app.loadInput(content, "pasted-hex.bin");
+        } catch (error) {
+            app.errors.handle(error);
+        }
+    });
 
     $("#newKsyModal form").submit(function (event) {
         event.preventDefault();

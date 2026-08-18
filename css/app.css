@@ -33,7 +33,9 @@ body { line-height:normal }
 #fileTree .jstree-icon { margin-left:3px; margin-right:5px }
 #fileTree .jstree-ocl { display:none }
 #fileTreeCont .footer { position:absolute; bottom:0; width:100%; padding-left:2px }
-#fileTreeCont .footer .btn { width:33.3%; border-radius:0; font-size:13px; padding:3px 10px }
+#fileTreeCont .footer .btn { width:25%; border-radius:0; font-size:13px; padding:3px 10px }
+#pasteHexValue { height:180px; font-family:Courier,monospace; resize:vertical }
+#pasteHexError:empty { display:none }
 .jstree-default-dark .jstree-anchor {
     color: #ccc;
 }

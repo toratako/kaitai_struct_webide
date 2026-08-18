@@ -174,6 +174,31 @@ class AppController {
     inputFsItem: IFsItem;
     lastKsyFsItem: IFsItem;
 
+    async loadInput(content: ArrayBuffer, fileName: string, refreshGui: boolean = true): Promise<void> {
+        return this.setInput(content, <IFsItem>{ fsType: "static", type: "file", fn: fileName }, refreshGui);
+    }
+
+    private async setInput(content: ArrayBuffer, fsItem: IFsItem, refreshGui: boolean): Promise<void> {
+        this.inputFsItem = fsItem;
+        this.inputContent = content;
+
+        this.dataProvider = {
+            length: content.byteLength,
+            get(offset, length) {
+                return new Uint8Array(content, offset, length);
+            }
+        };
+
+        this.ui.hexViewer.setDataProvider(this.dataProvider);
+        this.ui.layout.getLayoutNodeById("inputBinaryTab").setTitle(fsItem.fn);
+        await workerMethods.setInput(content);
+
+        if (refreshGui) {
+            await this.reparse();
+            this.ui.hexViewer.resize();
+        }
+    }
+
     async loadFsItem(fsItem: IFsItem, refreshGui: boolean = true): Promise<any> {
         if (!fsItem || fsItem.type !== "file")
             return;
@@ -190,26 +215,8 @@ class AppController {
             (<any>ksyEditor).container.setTitle(fsItem.fn);
         } else {
             let content = <ArrayBuffer>contentRaw;
-            this.inputFsItem = fsItem;
-            this.inputContent = content;
-
             localforage.setItem("inputFsItem", fsItem);
-
-            this.dataProvider = {
-                length: content.byteLength,
-                get(offset, length) {
-                    return new Uint8Array(content, offset, length);
-                }
-            };
-
-            this.ui.hexViewer.setDataProvider(this.dataProvider);
-            this.ui.layout.getLayoutNodeById("inputBinaryTab").setTitle(fsItem.fn);
-            await workerMethods.setInput(content);
-
-            if (refreshGui) {
-                await this.reparse();
-                this.ui.hexViewer.resize();
-            }
+            await this.setInput(content, fsItem, refreshGui);
         }
     }
 

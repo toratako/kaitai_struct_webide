@@ -80,6 +80,22 @@ export function hexEncode(bytes: Uint8Array) {
     return binary;
 }
 
+export function hexDecode(value: string): ArrayBuffer {
+    const hex = value.replace(/\s/g, "");
+    if (hex.length === 0)
+        throw new Error("Hex input is empty.");
+    if (/[^0-9a-f]/i.test(hex))
+        throw new Error("Hex input may only contain hexadecimal digits and whitespace.");
+    if (hex.length % 2 !== 0)
+        throw new Error("Hex input must contain two digits per byte.");
+
+    const buffer = new ArrayBuffer(hex.length / 2);
+    const bytes = new Uint8Array(buffer);
+    for (var i = 0; i < bytes.length; i++)
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return buffer;
+}
+
 export function uuidEncode(bytes: Uint8Array, isMs: boolean) {
     const byteOrder = isMs ? [3,2,1,0,"-",5,4,"-",7,6,"-",8,9,"-",10,11,12,13,14,15] : [0,1,2,3,"-",4,5,"-",6,7,"-",8,9,"-",10,11,12,13,14,15];
     var uuid = "";
